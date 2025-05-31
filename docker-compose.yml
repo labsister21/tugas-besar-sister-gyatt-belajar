@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  node1:
+    build: .
+    environment:
+      - NODE_ID=node1
+      - CLUSTER_NODES=node1,node2,node3,node4
+      - PORT=3000
+    ports:
+      - "3001:3000"
+    networks:
+      raft-network:
+        aliases:
+          - node1
+
+  node2:
+    build: .
+    environment:
+      - NODE_ID=node2
+      - CLUSTER_NODES=node1,node2,node3,node4
+      - PORT=3000
+    ports:
+      - "3002:3000"
+    networks:
+      raft-network:
+        aliases:
+          - node2
+
+  node3:
+    build: .
+    environment:
+      - NODE_ID=node3
+      - CLUSTER_NODES=node1,node2,node3,node4
+      - PORT=3000
+    ports:
+      - "3003:3000"
+    networks:
+      raft-network:
+        aliases:
+          - node3
+
+  node4:
+    build: .
+    environment:
+      - NODE_ID=node4
+      - CLUSTER_NODES=node1,node2,node3,node4
+      - PORT=3000
+    ports:
+      - "3004:3000"
+    networks:
+      raft-network:
+        aliases:
+          - node4
+
+  client:
+    build: .
+    command: npm run client
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+    networks:
+      - raft-network
+
+networks:
+  raft-network:
+    driver: bridge
