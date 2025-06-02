@@ -53,7 +53,18 @@ services:
         aliases:
           - node4
 
-  client:
+  client1:
+    build: .
+    command: npm run client
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+    networks:
+      - raft-network
+
+  client2:
     build: .
     command: npm run client
     depends_on:

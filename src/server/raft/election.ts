@@ -2,8 +2,8 @@ import { RaftNode } from './node';
 
 export class ElectionManager {
   private electionTimeoutId: NodeJS.Timeout;
-  private readonly minElectionTimeout: number = 1500;
-  private readonly maxElectionTimeout: number = 3000;
+  private readonly minElectionTimeout: number = 150;
+  private readonly maxElectionTimeout: number = 300;
 
   constructor(private node: RaftNode) {}
 
@@ -23,8 +23,7 @@ export class ElectionManager {
 
   private getRandomElectionTimeout(): number {
     return Math.floor(
-      Math.random() * (this.maxElectionTimeout - this.minElectionTimeout) + 
-      this.minElectionTimeout
+      Math.random() * (this.maxElectionTimeout - this.minElectionTimeout) + this.minElectionTimeout
     );
   }
 }
