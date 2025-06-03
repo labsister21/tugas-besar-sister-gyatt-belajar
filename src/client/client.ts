@@ -15,6 +15,17 @@ const NODE_ADDRESSES = [
 
 let currentLeader = NODE_ADDRESSES[0];
 
+async function pingNode(address: string) {
+  try {
+    const res = await axios.get(`${address}/health`);
+    console.log(`PONG from ${address}`);
+    console.log(`State: ${res.data.state}, Leader: ${res.data.leader}`);
+  } catch (err) {
+    console.error(`Ping failed to ${address}: ${err.message}`);
+  }
+}
+
+
 async function sendCommand(command: string) {
   const parts = command.split(' ');
   const cmdType = parts[0];
@@ -46,9 +57,22 @@ function startCLI() {
       return;
     }
 
-    await sendCommand(input);
+    // For check status of the node, specify by 'status x', where x is the node address
+    if (input.startsWith('status')) {
+      const parts = input.split(' ');
+      const nodeIdx = parseInt(parts[1] || '0');
+      if (NODE_ADDRESSES[nodeIdx]) {
+        await pingNode(NODE_ADDRESSES[nodeIdx]);
+      } else {
+        console.log('Invalid node index');
+      }
+    } else {
+      await sendCommand(input);
+    }
+
     startCLI();
   });
 }
+
 
 startCLI();

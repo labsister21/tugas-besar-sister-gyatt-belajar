@@ -154,7 +154,7 @@ export class RaftNode {
     lastLogIndex: number,
     lastLogTerm: number
   ): { term: number; voteGranted: boolean } {
-    // Reject if term is stale
+    // Reject if term is lower
     if (term < this.currentTerm) {
       return { term: this.currentTerm, voteGranted: false };
     }
@@ -183,7 +183,6 @@ export class RaftNode {
     return { term: this.currentTerm, voteGranted: false };
   }
 
-  // TODO: fix heartbeat to using RPC
   public async sendHeartbeat() {
     for (const node of this.clusterNodes) {
       try {
@@ -192,9 +191,10 @@ export class RaftNode {
           leaderId: this.id,
           prevLogIndex: this.logManager.getLastLogIndex(),
           prevLogTerm: this.logManager.getLastLogTerm(),
-          entries: [], // Empty for heartbeat
+          entries: [], // Empty if heartbeat
           leaderCommit: this.logManager.getCommitIndex(),
         });
+        console.log(`Jedak to ${node.id}`)
       } catch (error) {
         console.error(`Failed to send heartbeat to ${node.id}:`, error.message);
       }
@@ -209,7 +209,7 @@ export class RaftNode {
     entries: LogEntry[],
     leaderCommit: number
   ): { term: number; success: boolean } {
-    // False if term < currentTerm
+    // If term < currentTerm, false
     if (term < this.currentTerm) {
       return { term: this.currentTerm, success: false };
     }
@@ -217,7 +217,7 @@ export class RaftNode {
     // Reset election timeout if we get valid leader communication
     this.electionManager.resetElectionTimer();
 
-    // If RPC request contains higher term, update current term
+    // If request contains higher term, update current term
     if (term > this.currentTerm) {
       this.currentTerm = term;
       this.state = "follower";
@@ -232,6 +232,10 @@ export class RaftNode {
     // Append new entries
     if (entries && entries.length > 0) {
       this.logManager.appendEntries(entries, prevLogIndex, prevLogTerm);
+    }
+
+    if (entries.length === 0) {
+      console.log(`Jeduk from ${leaderId}`)
     }
 
     // Update commit index

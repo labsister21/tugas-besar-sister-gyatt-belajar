@@ -62,7 +62,9 @@ services:
       - node3
       - node4
     networks:
-      - raft-network
+      raft-network:
+        aliases:
+          - client1
 
   client2:
     build: .
@@ -73,7 +75,9 @@ services:
       - node3
       - node4
     networks:
-      - raft-network
+      raft-network:
+        aliases:
+          - client2
 
 networks:
   raft-network:

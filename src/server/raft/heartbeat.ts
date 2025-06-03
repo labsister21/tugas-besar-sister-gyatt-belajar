@@ -3,7 +3,6 @@ import { RaftNode } from './node';
 export class HeartbeatManager {
   private intervalId: NodeJS.Timeout;
   // For now 1s
-  // TODO: implement in env
   private readonly heartbeatInterval: number = 1000;
 
   constructor(private node: RaftNode) {}

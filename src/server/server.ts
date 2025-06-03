@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { RaftNode } from './raft/node';
+import axios from 'axios';
 
 const app = express();
 app.use(bodyParser.json());
@@ -74,6 +75,37 @@ app.post('/raft/request-vote', (req, res) => {
   
   res.json(response);
 });
+
+// Print status heartbeat
+app.get('/status', async (_, res) => {
+  const statuses = await Promise.all(
+    CLUSTER_NODES.map(async (nodeId) => {
+      const url = `http://${nodeId}:3000/health`;
+      try {
+        const response = await axios.get(url);
+        return {
+          id: nodeId,
+          state: response.data.state,
+          term: response.data.term,
+          leader: response.data.leader,
+          healthy: true
+        };
+      } catch (err) {
+        return {
+          id: nodeId,
+          state: 'unknown',
+          term: 'unknown',
+          leader: 'unknown',
+          healthy: false,
+          error: err
+        };
+      }
+    })
+  );
+
+  res.json({ cluster: statuses });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Raft Node ${NODE_ID} listening on port ${PORT}`);
