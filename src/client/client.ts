@@ -37,10 +37,15 @@ async function sendCommand(command: string) {
   const commandObj = { type: cmdType, key, value };
 
   try {
-    const response = await axios.post(`${currentLeader}/execute`, {
-      command: commandObj
-    });
-    console.log(response.data.result);
+    if (command === "request_log") {
+      const response = await axios.get(`${currentLeader}/request_log`);
+      console.log(response.data);
+    } else {
+      const response = await axios.post(`${currentLeader}/execute`, {
+        command: commandObj
+      });
+      console.log(response.data.result);
+    }
   } catch (error) {
     if (error.response?.status === 302) {
       currentLeader = error.response.data.leader;

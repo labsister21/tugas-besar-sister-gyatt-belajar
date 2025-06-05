@@ -33,7 +33,7 @@ app.post('/execute', async (req, res) => {
       leader: leader 
     });
   }
-
+  
   try {
     const result = await raftNode.replicateCommand(req.body.command);
     res.json({ result });
@@ -41,6 +41,21 @@ app.post('/execute', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+app.get('/request_log', (req, res) => {
+  const leader = `http://${raftNode.getLeader()}:${PORT}`;
+  if (raftNode.state !== "leader") {
+    return res.status(302).json({ 
+      error: 'Not leader', 
+      leader: leader 
+    });
+  }
+
+  const logs = raftNode.getAllLogs();
+  res.json({ logs });
+});
+
 
 
 app.post('/raft/append-entries', (req, res) => {
