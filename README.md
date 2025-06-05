@@ -9,14 +9,7 @@
   <p align="center">
     <h3>Tugas Besar 1 IF3130 Sistem Paralel dan Terdistribusi</h3>
     <h4> Implementasi RAFT Consensus Menggunakan NodeJS</h4>
-    <br/>
-    <a href="https://github.com/NoHaitch/Perfect-Magic-Cube-Local-Search/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/NoHaitch/Perfect-Magic-Cube-Local-Search/issues">Request Feature</a>
 <br>
-<br>
-
-[![MIT License][license-shield]][license-url]
 
   </p>
 </div>
@@ -50,10 +43,9 @@
 
 ## External Links
 
-- [Spesifikasi](https://docs.google.com/document/d/1QDj9Pi3HrBr2VdFIvsnrA8KXaISpEr4JaGlYRxOUPWw/edit?tab=t.0)
-- [QNA](https://docs.google.com/spreadsheets/d/1vdcs6_H2dzAcGRpMfuVdMeMgwbOueonr9H8Ktf1EsM0/edit?gid=214125299#gid=214125299)
-- [Teams](https://docs.google.com/spreadsheets/d/1P89vLbXLBLD1yFKTNlYXQKq8-LoLnciIyaN9sYpYzt4/edit?gid=356897139#gid=356897139)
-- [Laporan](https://github.com/NoHaitch/Perfect-Magic-Cube-Local-Search/blob/main/doc/Laporan%20Tugas%20Besar%201%20IF3170%20-%20Kelompok%2018.pdf)
+- [Spesifikasi](https://docs.google.com/document/d/1TsojmsiQMC2gVcIgNror7VST06aLwxfx)
+- [QNA](https://docs.google.com/spreadsheets/d/1BFbrb6wJ3x9Tkiua4vCoh10M57HWag367ux1RzBui2M)
+- [Teams](https://docs.google.com/spreadsheets/d/1FceAZy0w57dwUN7yuCpkYDA7g-mdmCDJBa1_ddvULn0)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -61,9 +53,13 @@
 
 ## About The Project
 
-Raft Consensus
+Raft Consensus Algorithm  
+Based on this paper: https://raft.github.io/raft.pdf 
 
-Raft is a consensus protocol used to synchronize and coordinized all computers used in a distributed system. This protocol configure how each computer in the system always in sync and match their transaction logs and their order.
+
+Consensus protocol/algorithm allows a collection of machine to work as a coherent group that can survive the failure of its members. Used in a distributed system, consesus main idea is to use a voting mechanism to maintain a global data where it needs the majority of vote before changing the global data. 
+
+Raft, itself is one of the consesus algorithm to improve Paxos. Improved from Paxos, Raft uses a leader election, log replication, and safety to better increase the effeciency and structure. This protocol configure how each computer in the system always in sync and match their transaction logs and their order.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -100,7 +96,7 @@ _How to install and use your project_
 3. Build the program
 
     ```sh
-    docker compose build
+    docker-compose up --build
     ```
 
 
@@ -117,42 +113,12 @@ Run all the servers and clients node at once,
   ```
 
   or run a single node, for example one client:
-
+`
   ```docker
   docker compose up client1
   ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
-## Task Distribution
-
-|   NIM    |Tugas|
-|:--------:|:-:|
-| 13522037 |   |
-| 13522071 |   |
-| 13522091 |   |
-
-
-<!-- CONTRIBUTING -->
-
-## Contributing
-
-If you want to contribute or further develop the program, please fork this repository using the branch feature.  
-Pull Request is **permited and warmly welcomed**
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- LICENSE -->
-
-## Licensing
-
-The code in this project is licensed under MIT license.
-
 <br>
 <h3 align="center"> THANK YOU! </h3>
-
-[issues-url]: https://github.com/NoHaitch/Perfect-Magic-Cube-Local-Search/issues
-[license-shield]: https://img.shields.io/badge/License-MIT-yellow
-[license-url]: https://github.com/NoHaitch/Perfect-Magic-Cube-Local-Search/blob/main/LICENSE
