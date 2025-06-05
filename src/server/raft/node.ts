@@ -28,7 +28,7 @@ export class RaftNode {
     this.id = id;
     this.electionManager = new ElectionManager(this);
     this.heartbeatManager = new HeartbeatManager(this);
-    this.logManager = new LogManager();
+    this.logManager = new LogManager(this.id);
     this.membershipManager = new MembershipManager();
 
     // Init

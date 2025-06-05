@@ -1,4 +1,6 @@
 import { KeyValueStore } from "../store/store";
+import fs from "fs";
+import path from "path";
 
 export interface LogEntry {
   term: number;
@@ -12,12 +14,43 @@ export interface LogEntry {
 
 export class LogManager {
   private logs: LogEntry[] = [];
-  private commitIndex: number = -1;
-  private lastApplied: number = -1;
+  private commitIndex = -1;
+  private lastApplied = -1;
   private stateMachine: KeyValueStore;
+  private logFilePath: string;
 
-  constructor() {
+  constructor(nodeId: string) {
     this.stateMachine = new KeyValueStore();
+    this.logFilePath = path.resolve(__dirname, `../../data/${nodeId}_log.json`);
+    this.loadLogsFromDisk();
+  }
+
+  private loadLogsFromDisk() {
+    try {
+      if (fs.existsSync(this.logFilePath)) {
+        const data = fs.readFileSync(this.logFilePath, "utf-8");
+        const parsed = JSON.parse(data);
+        this.logs = parsed.logs || [];
+        this.commitIndex = parsed.commitIndex ?? -1;
+        this.lastApplied = parsed.lastApplied ?? -1;
+        this.applyLogs();
+      }
+    } catch (err) {
+      console.error("Failed to load logs:", err);
+    }
+  }
+
+  private saveLogsToDisk() {
+    try {
+      const json = JSON.stringify({
+        logs: this.logs,
+        commitIndex: this.commitIndex,
+        lastApplied: this.lastApplied
+      }, null, 2);
+      fs.writeFileSync(this.logFilePath, json, "utf-8");
+    } catch (err) {
+      console.error("Failed to save logs:", err);
+    }
   }
 
   public getCommitIndex(): number {
@@ -28,6 +61,7 @@ export class LogManager {
     if (index > this.commitIndex) {
       this.commitIndex = index;
       this.applyLogs();
+      this.saveLogsToDisk();
     }
   }
 
@@ -40,7 +74,6 @@ export class LogManager {
     prevLogIndex: number,
     prevLogTerm: number
   ): boolean {
-    // Validate previous log entry
     if (
       prevLogIndex >= 0 &&
       (prevLogIndex >= this.logs.length ||
@@ -49,7 +82,6 @@ export class LogManager {
       return false;
     }
 
-    // Delete entries that conflict and append the new ones
     let i = 0;
     for (; i < entries.length; i++) {
       const newIndex = prevLogIndex + 1 + i;
@@ -62,29 +94,11 @@ export class LogManager {
       }
     }
 
-    // Append rest
     for (; i < entries.length; i++) {
       this.logs.push(entries[i]);
     }
 
-    return true;
-  }
-
-  getLastLogTerm(): number {
-    return this.logs.length > 0 ? this.logs[this.logs.length - 1].term : 0;
-  }
-
-  getLastLogIndex(): number {
-    return this.logs.length - 1;
-  }
-
-  validateLog(prevLogIndex: number, prevLogTerm: number): boolean {
-    if (prevLogIndex >= this.logs.length) {
-      return false;
-    }
-    if (prevLogIndex >= 0 && this.logs[prevLogIndex].term !== prevLogTerm) {
-      return false;
-    }
+    this.saveLogsToDisk();
     return true;
   }
 
@@ -92,6 +106,7 @@ export class LogManager {
     if (index > this.commitIndex) {
       this.commitIndex = index;
       this.applyLogs();
+      this.saveLogsToDisk();
     }
   }
 
@@ -107,5 +122,18 @@ export class LogManager {
 
   getEntry(index: number): LogEntry | null {
     return this.logs[index] || null;
+  }
+
+  getLastLogTerm(): number {
+    return this.logs.length > 0 ? this.logs[this.logs.length - 1].term : 0;
+  }
+
+  getLastLogIndex(): number {
+    return this.logs.length - 1;
+  }
+
+  validateLog(prevLogIndex: number, prevLogTerm: number): boolean {
+    if (prevLogIndex >= this.logs.length) return false;
+    return this.logs[prevLogIndex].term === prevLogTerm;
   }
 }

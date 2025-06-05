@@ -7,11 +7,13 @@ services:
       - PORT=3000
     ports:
       - "3001:3000"
+    volumes:
+      - node1_data:/app/data
     networks:
       raft-network:
         aliases:
           - node1
-      client-network: {} # allow clients to access public API
+      client-network: {}
 
   node2:
     build: .
@@ -21,6 +23,8 @@ services:
       - PORT=3000
     ports:
       - "3002:3000"
+    volumes:
+      - node2_data:/app/data
     networks:
       raft-network:
         aliases:
@@ -35,6 +39,8 @@ services:
       - PORT=3000
     ports:
       - "3003:3000"
+    volumes:
+      - node3_data:/app/data
     networks:
       raft-network:
         aliases:
@@ -49,6 +55,8 @@ services:
       - PORT=3000
     ports:
       - "3004:3000"
+    volumes:
+      - node4_data:/app/data
     networks:
       raft-network:
         aliases:
@@ -63,6 +71,8 @@ services:
       - PORT=3000
     ports:
       - "3005:3000"
+    volumes:
+      - node5_data:/app/data
     networks:
       raft-network:
         aliases:
@@ -100,6 +110,13 @@ services:
       client-network:
         aliases:
           - client2
+
+volumes:
+  node1_data:
+  node2_data:
+  node3_data:
+  node4_data:
+  node5_data:
 
 networks:
   raft-network:
