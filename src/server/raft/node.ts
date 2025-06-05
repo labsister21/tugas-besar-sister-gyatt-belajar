@@ -46,30 +46,16 @@ export class RaftNode {
     this.state = "candidate";
     this.currentTerm++;
     this.votedFor = this.id;
-    console.log(`\n[${this.id}] Starting election for term ${this.currentTerm}`);
 
-    const votes = await this.requestVotes()
-    const majority = this.membershipManager.getMajorityCount();
-
-    if (votes >= majority) {
+    const votes = await this.requestVotes();
+    if (votes >= this.membershipManager.getMajorityCount()) {
       this.becomeLeader();
-      console.log(`[${this.id}] Won the election with ${votes}/${this.clusterNodes.length} votes!`);
     } else {
-      console.log(`[${this.id}] Lost the election with ${votes}/${this.clusterNodes.length} votes.`);
       this.state = "follower";
     }
   }
 
   private async requestVotes(): Promise<number> {
-    console.log(`[${this.id}] Requesting votes for term ${this.currentTerm}...`);
-
-    let voteCount = 0;
-
-    // Count self vote only if votedFor is this node
-    if (this.votedFor === this.id) {
-      voteCount += 1;
-    }
-
     const requests = this.clusterNodes
       .filter((node) => node.id !== this.id)
       .map(async (node) => {
@@ -83,25 +69,16 @@ export class RaftNode {
               lastLogTerm: this.logManager.getLastLogTerm(),
             }
           );
-          if (response.data.voteGranted) {
-            console.log(`[${node.id}] voted for ${this.id}`);
-          } else {
-            console.log(`[${node.id}] rejected vote for ${this.id}`);
-          }
           return response.data.voteGranted ? 1 : 0;
         } catch (error) {
-          console.error(`[${node.id}] vote request failed:`, error.message);
+          console.error("Error:", error);
           return 0;
         }
       });
 
     const results = await Promise.all(requests);
-    voteCount += results.reduce((sum, vote) => sum + vote, 0);
-
-    return voteCount;
+    return results.reduce((sum, vote) => sum + vote, 1); // + self vote
   }
-
-
 
   private becomeLeader() {
     this.state = "leader";
@@ -208,20 +185,18 @@ export class RaftNode {
 
   public async sendHeartbeat() {
     for (const node of this.clusterNodes) {
-      if (node.id === this.id) continue;
-
       try {
         await axios.post(`${node.address}/raft/append-entries`, {
           term: this.currentTerm,
           leaderId: this.id,
           prevLogIndex: this.logManager.getLastLogIndex(),
           prevLogTerm: this.logManager.getLastLogTerm(),
-          entries: [], // Heartbeat
+          entries: [], // Empty if heartbeat
           leaderCommit: this.logManager.getCommitIndex(),
         });
-        console.log(`[Heartbeat] Sent to ${node.id}`);
+        console.log(`[Heartbeat] Send to ${node.id}`)
       } catch (error) {
-        console.warn(`[Heartbeat] Failed to reach ${node.id}: ${error.message}`);
+        console.error(`Failed to send heartbeat to ${node.id}:`, error.message);
       }
     }
   }
@@ -260,7 +235,7 @@ export class RaftNode {
     }
 
     if (entries.length === 0) {
-      console.log(`[Heartbeat] received from ${leaderId}`)
+      console.log(`[Heartbeat] Received from ${leaderId}`)
     }
 
     // Update commit index
