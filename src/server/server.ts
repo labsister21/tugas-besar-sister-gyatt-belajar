@@ -91,6 +91,14 @@ app.post('/raft/request-vote', (req, res) => {
   res.json(response);
 });
 
+app.post("/raft/update-membership", (req, res) => {
+  const { config } = req.body;
+  const response = raftNode.handleApplyConfig(
+    config
+  );
+  res.json({ success: true });
+});
+
 // Print status heartbeat
 app.get('/status', async (_, res) => {
   const statuses = await Promise.all(

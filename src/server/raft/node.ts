@@ -1,10 +1,10 @@
 import { ElectionManager } from "./election";
 import { HeartbeatManager } from "./heartbeat";
-import { LogEntry, LogManager } from "./log";
+import { LogEntry, LogEntryMessage, LogManager } from "./log";
 import { MembershipManager } from "./membership";
 import axios from "axios";
 
-type NodeState = "follower" | "candidate" | "leader";
+type NodeState = "follower" | "candidate" | "leader" | "JedagJedugLearner" | "nonMemberJedagJedug";
 
 interface ClusterNode {
   id: string;
@@ -24,12 +24,15 @@ export class RaftNode {
   private membershipManager: MembershipManager;
   private clusterNodes: ClusterNode[] = [];
 
+  private nextIndex: Record<string, number> = {};
+  private matchIndex: Record<string, number> = {};
+
   constructor(id: string, initialNodes: string[]) {
     this.id = id;
     this.electionManager = new ElectionManager(this);
     this.heartbeatManager = new HeartbeatManager(this);
     this.logManager = new LogManager(this.id);
-    this.membershipManager = new MembershipManager();
+    this.membershipManager = new MembershipManager(this);
 
     // Init
     initialNodes.forEach((nodeId) => {
@@ -85,13 +88,16 @@ export class RaftNode {
     this.knownLeader = this.id;
     this.heartbeatManager.start();
     console.log(`Node ${this.id} became leader for term ${this.currentTerm}`);
+
+    for (const node of this.clusterNodes) {
+      if (node.id !== this.id) {
+        this.nextIndex[node.id] = this.logManager.getLastLogIndex() + 1; 
+        this.matchIndex[node.id] = 0; 
+      }
+    }
   }
 
-  public async replicateCommand(command: {
-    type: string;
-    key?: string;
-    value?: string;
-  }): Promise<string> {
+  public async replicateCommand(messageToSend : LogEntryMessage): Promise<string> {
     if (this.state !== "leader") {
       throw new Error("Not leader");
     }
@@ -99,12 +105,14 @@ export class RaftNode {
     const logEntry: LogEntry = {
       term: this.currentTerm,
       index: this.logManager.getLastLogIndex() + 1,
-      command,
+      message: messageToSend,
     };
 
     const replicas = this.clusterNodes
       .filter((n) => n.id !== this.id)
       .map(async (node) => {
+        const prevLogIndex = this.nextIndex[node.id] - 1;
+        const prevLogTerm = this.logManager.getLogTerm(prevLogIndex);
         try {
           const response = await axios.post(
             `${node.address}/raft/append-entries`,
@@ -117,6 +125,14 @@ export class RaftNode {
               leaderCommit: this.logManager.getCommitIndex(),
             }
           );
+
+          if (response.data.success) {
+            this.nextIndex[node.id] = logEntry.index + 1; // [ADDED]
+            this.matchIndex[node.id] = logEntry.index; // [ADDED]
+            this.checkLearnerCatchUp(node.id); // [ADDED]
+          } else {
+            this.nextIndex[node.id] = Math.max(1, this.nextIndex[node.id] - 1); // [ADDED]
+          }
 
           return response.data.success;
         } catch (error) {
@@ -135,7 +151,11 @@ export class RaftNode {
         this.logManager.getLastLogTerm()
       );
       this.logManager.commit(logEntry.index);
-      return this.logManager.getStateMachine().execute(command);
+      if (messageToSend.command){
+        return this.logManager.getStateMachine().execute(messageToSend.command);
+      } else if (messageToSend.config) {
+        this.membershipManager.applyNewConfig(messageToSend.config);
+      }
     } else {
       throw new Error("Failed to replicate command to majority");
     }
@@ -185,8 +205,10 @@ export class RaftNode {
 
   public async sendHeartbeat() {
     for (const node of this.clusterNodes) {
+      const prevLogIndex = this.nextIndex[node.id] - 1; // [ADDED]
+      const prevLogTerm = this.logManager.getLogTerm(prevLogIndex); // [ADDED]
       try {
-        await axios.post(`${node.address}/raft/append-entries`, {
+        const response  = await axios.post(`${node.address}/raft/append-entries`, {
           term: this.currentTerm,
           leaderId: this.id,
           prevLogIndex: this.logManager.getLastLogIndex(),
@@ -194,10 +216,28 @@ export class RaftNode {
           entries: [], // Empty if heartbeat
           leaderCommit: this.logManager.getCommitIndex(),
         });
+
+        if (response.data.success) {
+          this.matchIndex[node.id] = prevLogIndex; 
+          this.checkLearnerCatchUp(node.id); 
+        } else {
+          this.nextIndex[node.id] = Math.max(1, this.nextIndex[node.id] - 1); 
+        }
+
         console.log(`Jedak to ${node.id}`)
       } catch (error) {
         console.error(`Failed to send heartbeat to ${node.id}:`, error.message);
       }
+    }
+  }
+
+  private checkLearnerCatchUp(nodeId: string) { 
+    if (
+      this.matchIndex[nodeId] === this.logManager.getLastLogIndex() &&
+      this.membershipManager.isLearner(nodeId)
+    ) {
+      console.log(`Learner ${nodeId} caught up, promoting...`);
+      
     }
   }
 
@@ -248,8 +288,17 @@ export class RaftNode {
     return { term: this.currentTerm, success: true };
   }
 
+  public handleApplyConfig(
+    config : RaftNode[]
+  ): { success: boolean } {
+    if (this.membershipManager.applyNewConfig(config)){
+      return { success: true };
+    } else {
+      return { success: false };
+    }
+  }
+
   public getAllLogs() {
     return this.logManager.getAllLogs();
   }
-
 }
