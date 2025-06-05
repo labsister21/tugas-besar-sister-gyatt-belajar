@@ -1,9 +1,9 @@
 import { RaftNode } from './node';
 
+export const HEARTBEAT_INTERVAL: number = 3000;
+
 export class HeartbeatManager {
   private intervalId: NodeJS.Timeout;
-  // For now 1s
-  private readonly heartbeatInterval: number = 1000;
 
   constructor(private node: RaftNode) {}
 
@@ -12,7 +12,7 @@ export class HeartbeatManager {
       if (this.node.state === 'leader') {
         this.node.sendHeartbeat();
       }
-    }, this.heartbeatInterval);
+    }, HEARTBEAT_INTERVAL);
   }
 
   stop() {

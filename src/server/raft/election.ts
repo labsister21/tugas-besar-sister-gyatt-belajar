@@ -1,9 +1,10 @@
 import { RaftNode } from './node';
+import { HEARTBEAT_INTERVAL } from './heartbeat';
 
 export class ElectionManager {
   private electionTimeoutId: NodeJS.Timeout;
-  private readonly minElectionTimeout: number = 150;
-  private readonly maxElectionTimeout: number = 300;
+  private readonly minElectionTimeout: number = HEARTBEAT_INTERVAL;
+  private readonly maxElectionTimeout: number = HEARTBEAT_INTERVAL * 2;
 
   constructor(private node: RaftNode) {}
 
