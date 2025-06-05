@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT || 3000;
 const NODE_ID = process.env.NODE_ID || 'node1';
 const CLUSTER_NODES = process.env.CLUSTER_NODES?.split(',') || [
-  'node1', 'node2', 'node3', 'node4'
+  'node1', 'node2', 'node3', 'node4', 'node5'
 ];
 
 const raftNode = new RaftNode(NODE_ID, CLUSTER_NODES);
@@ -27,7 +27,7 @@ app.get('/health', (_, res) => {
 // Execute command
 app.post('/execute', async (req, res) => {
   if (raftNode.state !== 'leader') {
-    const leader = `http://${raftNode.getLeader()}:${process.env.PORT}`;
+    const leader = `http://${raftNode.getLeader()}:${PORT}`;
     return res.status(302).json({ 
       error: 'Not leader', 
       leader: leader 
