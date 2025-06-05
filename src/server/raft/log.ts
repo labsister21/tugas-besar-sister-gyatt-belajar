@@ -1,15 +1,21 @@
 import { KeyValueStore } from "../store/store";
+import { RaftNode } from "./node";
 import fs from "fs";
 import path from "path";
 
-export interface LogEntry {
-  term: number;
-  index: number;
-  command: {
+export interface LogEntryMessage {
+  command?: {
     type: string;
     key?: string;
     value?: string;
   };
+  config?: RaftNode[];
+}
+
+export interface LogEntry {
+  term: number;
+  index: number;
+  message: LogEntryMessage;
 }
 
 export class LogManager {
@@ -119,7 +125,7 @@ export class LogManager {
       this.lastApplied++;
       const entry = this.logs[this.lastApplied];
       if (entry) {
-        this.stateMachine.execute(entry.command);
+        this.stateMachine.execute(entry.message.command);
       }
     }
   }
@@ -149,4 +155,13 @@ export class LogManager {
   public getAllLogs(): LogEntry[] {
     return this.logs;
   }
+
+  getLogTerm(index: number): number {
+  if (index === 0) return 0;
+  const entry = this.logs.find(e => e.index === index);
+  if (!entry) {
+    throw new Error(`Log term not found for index ${index}`);
+  }
+  return entry.term;
+}
 }
