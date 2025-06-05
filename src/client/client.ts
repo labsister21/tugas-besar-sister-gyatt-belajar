@@ -27,12 +27,11 @@ async function pingNode(address: string) {
 }
 
 function parseNodeFromCommand(parts: string[]): { targetNode: string | null, cleanedParts: string[] } {
-  // Check if the last part looks like a node specification (nodeX)
   const lastPart = parts[parts.length - 1];
   if (lastPart && lastPart.match(/^node[1-5]$/)) {
     const nodeNumber = parseInt(lastPart.replace('node', ''));
-    const targetNode = NODE_ADDRESSES[nodeNumber - 1]; // node1 = index 0
-    const cleanedParts = parts.slice(0, -1); // Remove the node specification
+    const targetNode = NODE_ADDRESSES[nodeNumber - 1];
+    const cleanedParts = parts.slice(0, -1);
     return { targetNode, cleanedParts };
   }
   return { targetNode: null, cleanedParts: parts };
@@ -72,19 +71,15 @@ async function sendCommand(command: string) {
     }
   }
 
-  // If a specific node was targeted, try that node first
   if (targetNode) {
     console.log(`Targeting specific node: ${targetNode}`);
     if (await trySend(targetNode)) return;
   }
 
-  // If no specific node was targeted, or if the targeted node failed,
-  // fall back to the original behavior: try current leader first
   if (!targetNode || targetNode !== currentLeader) {
     if (await trySend(currentLeader)) return;
   }
 
-  // Try all other nodes as fallback
   for (const node of NODE_ADDRESSES) {
     if (node === currentLeader || node === targetNode) continue;
     if (await trySend(node)) return;
@@ -123,13 +118,11 @@ function startCLI() {
       if (parts.length > 1) {
         const target = parts[1];
         
-        // Handle both "status nodeX" and "status N" formats
         if (target.match(/^node[1-5]$/)) {
           const nodeNumber = parseInt(target.replace('node', ''));
           const targetAddress = NODE_ADDRESSES[nodeNumber - 1];
           await pingNode(targetAddress);
         } else {
-          // Legacy format: "status N" where N is 0-4
           const nodeIdx = parseInt(target);
           if (NODE_ADDRESSES[nodeIdx]) {
             await pingNode(NODE_ADDRESSES[nodeIdx]);
@@ -138,7 +131,6 @@ function startCLI() {
           }
         }
       } else {
-        // No target specified, ping current leader
         await pingNode(currentLeader);
       }
     } else if (input === 'help') {
