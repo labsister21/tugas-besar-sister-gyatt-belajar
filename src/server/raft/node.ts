@@ -247,4 +247,9 @@ export class RaftNode {
 
     return { term: this.currentTerm, success: true };
   }
+
+  public getAllLogs() {
+    return this.logManager.getAllLogs();
+  }
+
 }

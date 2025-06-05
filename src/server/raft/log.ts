@@ -42,11 +42,15 @@ export class LogManager {
 
   private saveLogsToDisk() {
     try {
-      const json = JSON.stringify({
-        logs: this.logs,
-        commitIndex: this.commitIndex,
-        lastApplied: this.lastApplied
-      }, null, 2);
+      const json = JSON.stringify(
+        {
+          logs: this.logs,
+          commitIndex: this.commitIndex,
+          lastApplied: this.lastApplied,
+        },
+        null,
+        2
+      );
       fs.writeFileSync(this.logFilePath, json, "utf-8");
     } catch (err) {
       console.error("Failed to save logs:", err);
@@ -133,7 +137,16 @@ export class LogManager {
   }
 
   validateLog(prevLogIndex: number, prevLogTerm: number): boolean {
-    if (prevLogIndex >= this.logs.length) return false;
-    return this.logs[prevLogIndex].term === prevLogTerm;
+    if (prevLogIndex >= this.logs.length) {
+      return false;
+    }
+    if (prevLogIndex >= 0 && this.logs[prevLogIndex].term !== prevLogTerm) {
+      return false;
+    }
+    return true;
+  }
+
+  public getAllLogs(): LogEntry[] {
+    return this.logs;
   }
 }
