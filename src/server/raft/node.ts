@@ -205,7 +205,7 @@ export class RaftNode {
 
   public async sendHeartbeat() {
     for (const node of this.clusterNodes) {
-      const prevLogIndex = this.nextIndex[node.id] - 1; // [ADDED]
+      const prevLogIndex = this.nextIndex[node.id] - 1; 
       const prevLogTerm = this.logManager.getLogTerm(prevLogIndex); // [ADDED]
       try {
         const response  = await axios.post(`${node.address}/raft/append-entries`, {
