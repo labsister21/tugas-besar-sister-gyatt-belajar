@@ -12,6 +12,7 @@ export class ElectionManager {
     const timeout = this.getRandomElectionTimeout();
     this.electionTimeoutId = setTimeout(() => {
       if (this.node.state !== 'leader') {
+        console.log(`[${this.node.id}] Election timeout - starting new election.`);
         this.node.startElection();
       }
     }, timeout);
@@ -27,4 +28,9 @@ export class ElectionManager {
       Math.random() * (this.maxElectionTimeout - this.minElectionTimeout) + this.minElectionTimeout
     );
   }
+
+  stopElectionTimer() {
+    clearTimeout(this.electionTimeoutId);
+  }
+
 }

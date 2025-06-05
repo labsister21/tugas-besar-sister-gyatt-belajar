@@ -37,9 +37,14 @@ async function sendCommand(command: string) {
   const commandObj = { type: cmdType, key, value };
 
   try {
-    if (command === "request_log") {
-      const response = await axios.get(`${currentLeader}/request_log`);
-      console.log(response.data);
+    if (cmdType === "request_log") {
+      const nodeAddress = NODE_ADDRESSES.find(addr => addr.includes(key));
+      if (!nodeAddress) {
+        console.error(`Invalid node identifier: ${key}`);
+        return;
+      }
+      const response = await axios.get(`${nodeAddress}/request_log`);
+      console.log(response.data)
     } else {
       const response = await axios.post(`${currentLeader}/execute`, {
         command: commandObj
@@ -50,7 +55,12 @@ async function sendCommand(command: string) {
     if (error.response?.status === 302) {
       currentLeader = error.response.data.leader;
       console.log(`Redirected to leader: ${currentLeader}`);
-      await sendCommand(command); // Retry with new leader
+      if (cmdType === 'request_log') {
+        const response = await axios.get(`${currentLeader}/request_log`);
+        console.log(response.data);
+      } else {
+        await sendCommand(command); // Retry with new leader
+      }
     } else {
       console.error('Error:', error.message);
     }
@@ -73,6 +83,8 @@ function startCLI() {
       } else {
         console.log('Invalid node index');
       }
+    } else if (input === 'exit') {
+      return
     } else {
       await sendCommand(input);
     }
