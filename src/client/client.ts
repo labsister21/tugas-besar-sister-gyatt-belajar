@@ -10,8 +10,10 @@ const NODE_ADDRESSES = [
   'http://node1:3000',
   'http://node2:3000',
   'http://node3:3000',
-  'http://node4:3000'
+  'http://node4:3000',
+  'http://node5:3000'
 ];
+
 
 let currentLeader = NODE_ADDRESSES[0];
 
