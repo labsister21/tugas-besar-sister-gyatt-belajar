@@ -18,6 +18,8 @@ export class MembershipManager {
       this.broadcastJedagJedugMemberUpdate().catch(err => {
         console.error("Failed to broadcast membership update:", err);
       });
+
+      node.state = "JedagJedugLearner";
     }
   }
 
@@ -31,6 +33,8 @@ export class MembershipManager {
       this.broadcastJedagJedugMemberUpdate().catch(err => {
         console.error("Failed to broadcast membership update:", err);
       });
+
+      this.node.state = "nonMemberJedagJedug";
     }
   }
 
@@ -47,11 +51,11 @@ export class MembershipManager {
   private async broadcastJedagJedugMemberUpdate() {
     const configNew : LogEntryMessage = {config: this.clusterNodes};
     try {
-      const result = await this.node.replicateCommand(configNew);
-      res.json({ result });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+    await this.node.replicateCommand(configNew);
+    console.log("Broadcasted new membership configuration.");
+  } catch (error) {
+    console.error("Failed to broadcast membership update:", error.message);
+  }
   }
 
   private apply(config: RaftNode[]) {

@@ -42,6 +42,10 @@ export class RaftNode {
       });
     });
 
+  if (!initialNodes.includes(this.id)) {
+    this.state = "nonMemberJedagJedug";
+  }
+
     this.electionManager.startElectionTimer();
   }
 
@@ -237,7 +241,6 @@ export class RaftNode {
       this.membershipManager.isLearner(nodeId)
     ) {
       console.log(`Learner ${nodeId} caught up, promoting...`);
-      
     }
   }
 
