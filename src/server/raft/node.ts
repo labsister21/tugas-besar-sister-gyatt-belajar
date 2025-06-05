@@ -95,7 +95,7 @@ export class RaftNode {
 
     for (const node of this.clusterNodes) {
       if (node.id !== this.id) {
-        this.nextIndex[node.id] = this.logManager.getLastLogIndex() + 1; 
+        this.nextIndex[node.id] = this.logManager.getLastLogIndex() + 1;
         this.matchIndex[node.id] = 0; 
       }
     }
@@ -115,7 +115,8 @@ export class RaftNode {
     const replicas = this.clusterNodes
       .filter((n) => n.id !== this.id)
       .map(async (node) => {
-        const prevLogIndex = this.nextIndex[node.id] - 1;
+        const nextIdx = this.nextIndex[node.id] ?? (this.logManager.getLastLogIndex() + 1);
+        const prevLogIndex = nextIdx - 1;
         const prevLogTerm = this.logManager.getLogTerm(prevLogIndex);
         try {
           const response = await axios.post(
@@ -209,8 +210,9 @@ export class RaftNode {
 
   public async sendHeartbeat() {
     for (const node of this.clusterNodes) {
-      const prevLogIndex = this.nextIndex[node.id] - 1; // [ADDED]
-      const prevLogTerm = this.logManager.getLogTerm(prevLogIndex); // [ADDED]
+      const nextIdx = this.nextIndex[node.id] ?? (this.logManager.getLastLogIndex() + 1);
+      const prevLogIndex = nextIdx - 1;
+      const prevLogTerm = this.logManager.getLogTerm(prevLogIndex);
       try {
         const response  = await axios.post(`${node.address}/raft/append-entries`, {
           term: this.currentTerm,

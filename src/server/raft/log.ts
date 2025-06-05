@@ -157,11 +157,15 @@ export class LogManager {
   }
 
   getLogTerm(index: number): number {
-  if (index === 0) return 0;
-  const entry = this.logs.find(e => e.index === index);
-  if (!entry) {
-    throw new Error(`Log term not found for index ${index}`);
+    if (typeof index !== "number" || index <= 0 || isNaN(index)) {
+      console.warn(`Log term not found for index ${index}, returning 0`);
+      return 0;
+    }
+    const entry = this.logs.find(e => e.index === index);
+    if (!entry) {
+      console.warn(`Log term not found for index ${index}, returning 0`);
+      return 0;
+    }
+    return entry.term;
   }
-  return entry.term;
-}
 }
