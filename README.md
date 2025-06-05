@@ -109,13 +109,13 @@ _How to install and use your project_
 Run all the servers and clients node at once,
 
   ```docker
-  docker compose up
+  docker compose up -d
   ```
 
-  or run a single node, for example one client:
-`
+  and to run a single client, for example one client, find the docker container name using `docker ps`, and then use the container name in
+
   ```docker
-  docker compose up client1
+  docker attach {docker-container-name}
   ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
